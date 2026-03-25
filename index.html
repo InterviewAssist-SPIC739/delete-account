@@ -11,6 +11,7 @@
         :root {
             --primary: #4f46e5;
             --danger: #ef4444;
+            --success-color: #10b981;
             --bg-gradient: linear-gradient(135deg, #fef2f2 0%, #f1f5f9 100%);
             --text-main: #1e293b;
             --text-muted: #64748b;
@@ -105,7 +106,7 @@
             color: var(--danger);
         }
 
-        form {
+        #deletion-form {
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -157,6 +158,38 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
         }
 
+        button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Success Message Styling */
+        #success-message {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success-color);
+            margin-bottom: 20px;
+        }
+
+        .success-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 15px;
+        }
+
+        .success-text {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
         .back-link {
             text-align: center;
             margin-top: 25px;
@@ -179,38 +212,48 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Delete Account</h1>
-            <p class="subtitle">We're sorry to see you go.</p>
-        </header>
+        <!-- Form Section -->
+        <div id="form-container">
+            <header>
+                <h1>Delete Account</h1>
+                <p class="subtitle">We're sorry to see you go.</p>
+            </header>
 
-        <section class="warning-box">
-            <h3>Permanent Action</h3>
-            <ul>
-                <li>Your profile and personal data will be erased.</li>
-                <li>Your interview experiences will be anonymized.</li>
-                <li>You will lose access to all saved items and bookmarks.</li>
-                <li>This action cannot be undone.</li>
-            </ul>
-        </section>
+            <section class="warning-box">
+                <h3>Permanent Action</h3>
+                <ul>
+                    <li>Your profile and personal data will be erased.</li>
+                    <li>Your interview experiences will be anonymized.</li>
+                    <li>This action cannot be undone.</li>
+                </ul>
+            </section>
 
-        <form>
-            <div class="form-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" placeholder="Enter your full name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="Enter your registered email" required>
-            </div>
-            <div class="form-group">
-                <label for="reason">Reason for leaving (Optional)</label>
-                <textarea id="reason" rows="3" placeholder="Tell us how we can improve"></textarea>
-            </div>
-            <button type="submit">Submit Deletion Request</button>
-        </form>
+            <form id="deletion-form" action="https://formspree.io/f/YOUR_ID_HERE" method="POST">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" name="name" id="name" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" name="email" id="email" placeholder="Enter your registered email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reason">Reason for leaving (Optional)</label>
+                    <textarea name="reason" id="reason" rows="3" placeholder="Tell us how we can improve"></textarea>
+                </div>
+                <button type="submit" id="submit-btn">Submit Deletion Request</button>
+            </form>
+        </div>
 
-        <div class="back-link">
+        <!-- Success Message Section -->
+        <div id="success-message">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Request Submitted</h2>
+            <p class="success-text">Your deletion request has been successfully submitted. Our team will process it within <strong>seven days</strong>.</p>
+            <a href="index.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Return to Home</a>
+        </div>
+
+        <div class="back-link" id="back-link">
             <a href="index.html">← Back to Privacy Policy</a>
         </div>
 
@@ -218,5 +261,56 @@
             <p>&copy; 2025 InterviewAssist Platform.</p>
         </footer>
     </div>
+
+    <script>
+        const form = document.getElementById('deletion-form');
+        const formContainer = document.getElementById('form-container');
+        const successMessage = document.getElementById('success-message');
+        const backLink = document.getElementById('back-link');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // If action is still "YOUR_ID_HERE", don't actually fetch but show success for demo
+            if (form.action.includes('YOUR_ID_HERE')) {
+                alert("Please update the Formspree ID in the HTML code to receive actual emails.");
+                formContainer.style.display = 'none';
+                backLink.style.display = 'none';
+                successMessage.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting...';
+
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    formContainer.style.display = 'none';
+                    backLink.style.display = 'none';
+                    successMessage.style.display = 'block';
+                } else {
+                    const data = await response.json();
+                    alert(data.error || "Oops! There was a problem submitting your form");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Submit Deletion Request';
+                }
+            } catch (error) {
+                alert("Oops! There was a problem submitting your form");
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Deletion Request';
+            }
+        });
+    </script>
 </body>
 </html>
